@@ -17,6 +17,16 @@ class Api::RecipesController < ApplicationController
   end
   
 
+  def create
+    recipe = Recipe.create(recipe_params)
+    recipe.user = User.find_by email: params['recipe']['user']
+    if recipe.persisted?
+      render json: { recipe: recipe, message: 'Your recipe is created for you!' }, status: 201
+    else
+      render_error(recipe.errors.full_messages.to_sentence, 422)
+    end
+  end
+
   private
   def find_recipe
     @recipe = Recipe.find(params[:id])
