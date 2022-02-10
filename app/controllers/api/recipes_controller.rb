@@ -1,4 +1,5 @@
 class Api::RecipesController < ApplicationController
+  before_action :authenticate_user!, only: [:create]
   before_action :find_recipe, only: [:show, :update]
   rescue_from ActiveRecord::RecordNotFound, with: :render_404_error
 
@@ -17,7 +18,18 @@ class Api::RecipesController < ApplicationController
   end
   
 
+  def create
+    recipe = Recipe.create(recipe_params)
+    recipe.user = User.find_by uid: params['recipe']['user']
+    if recipe.persisted?
+      render json: { recipe: recipe, message: 'Your recipe is created for you!' }, status: 201
+    else
+      render_error(recipe.errors.full_messages.to_sentence, 422)
+    end
+  end
+
   private
+
   def find_recipe
     @recipe = Recipe.find(params[:id])
   end
@@ -29,6 +41,4 @@ class Api::RecipesController < ApplicationController
   def render_404_error
     render json: { message: 'Recipe not found' }, status: 404
   end
-
-  
 end
